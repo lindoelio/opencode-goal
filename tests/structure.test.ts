@@ -76,7 +76,7 @@ describe("Plugin structure", () => {
 
   it("has package.json with correct name", () => {
     const pkg = JSON.parse(readFile("package.json"))
-    expect(pkg.name).toBe("opencode-goal")
+    expect(pkg.name).toBe("@lindoelio/opencode-goal")
     expect(pkg.version).toBeTruthy()
     expect(pkg.license).toBe("MIT")
   })
