@@ -1,9 +1,9 @@
-# opencode-goal
+# opencode-goal-worker
 
 Session-scoped `/goal` command for [OpenCode](https://opencode.ai) with an autonomous execution loop and configurable judge model.
 
 ```
-npm install -g @lindoelio/opencode-goal
+npm install -g opencode-goal-worker
 opencode-goal
 ```
 
@@ -60,7 +60,7 @@ Built to match Claude Code's `/goal` primitive — set a verifiable completion c
 ### From npm
 
 ```bash
-npm install -g @lindoelio/opencode-goal
+npm install -g opencode-goal-worker
 opencode-goal
 ```
 
