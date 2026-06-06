@@ -1,5 +1,5 @@
 {
-  "name": "opencode-goal",
+  "name": "@lindoelio/opencode-goal",
   "version": "1.0.0",
   "description": "Session-scoped /goal command for OpenCode with autonomous execution loop, configurable judge model, and state persistence",
   "type": "module",

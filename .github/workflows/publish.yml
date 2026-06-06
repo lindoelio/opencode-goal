@@ -39,7 +39,7 @@ jobs:
         id: package_version
         run: |
           LOCAL_VERSION=$(node -p "require('./package.json').version")
-          PUBLISHED_VERSION=$(npm view opencode-goal version 2>/dev/null || true)
+          PUBLISHED_VERSION=$(npm view @lindoelio/opencode-goal version 2>/dev/null || true)
           echo "local_version=$LOCAL_VERSION" >> "$GITHUB_OUTPUT"
           echo "published_version=$PUBLISHED_VERSION" >> "$GITHUB_OUTPUT"
           if [ "$LOCAL_VERSION" = "$PUBLISHED_VERSION" ]; then
@@ -55,7 +55,7 @@ jobs:
       - name: Summarize publish result
         run: |
           if [ "${{ steps.package_version.outputs.already_published }}" = "true" ]; then
-            echo "opencode-goal@${{ steps.package_version.outputs.local_version }} is already published." >> "$GITHUB_STEP_SUMMARY"
+            echo "@lindoelio/opencode-goal@${{ steps.package_version.outputs.local_version }} is already published." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "Published opencode-goal@${{ steps.package_version.outputs.local_version }} to npm." >> "$GITHUB_STEP_SUMMARY"
+            echo "Published @lindoelio/opencode-goal@${{ steps.package_version.outputs.local_version }} to npm." >> "$GITHUB_STEP_SUMMARY"
           fi

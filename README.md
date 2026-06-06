@@ -1,12 +1,17 @@
-# OpenCode Goal
+# opencode-goal
 
 Session-scoped `/goal` command for [OpenCode](https://opencode.ai) with an autonomous execution loop and configurable judge model.
+
+```
+npm install -g @lindoelio/opencode-goal
+opencode-goal
+```
 
 ```
 /goal "All tests pass with npm test"
 ◎ Goal set · "All tests pass with npm test"
 ○ Turn 1 · 3 tests still failing
-○ Turn 2 · 1 test still failing  
+○ Turn 2 · 1 test still failing
 ✓ Goal achieved · 3 turns · 22s
 ```
 
@@ -55,7 +60,7 @@ Built to match Claude Code's `/goal` primitive — set a verifiable completion c
 ### From npm
 
 ```bash
-npm install -g opencode-goal
+npm install -g @lindoelio/opencode-goal
 opencode-goal
 ```
 
@@ -63,15 +68,15 @@ opencode-goal
 
 ```bash
 git clone https://github.com/lindoelio/opencode-goal
-cd opencode-goal
-node install.js
+npm install
+npm test
 ```
 
 ### Manual
 
 ```bash
 cp -r {commands,agents,skills} ~/.config/opencode/
-node install.js    # auto-configures opencode.json agents
+node install.js            # auto-configures opencode.json agents
 ```
 
 ## Configuration
