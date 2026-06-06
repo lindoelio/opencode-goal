@@ -50,11 +50,7 @@ jobs:
 
       - name: Publish to npm
         if: steps.package_version.outputs.already_published != 'true'
-        run: |
-          npm config set //registry.npmjs.org/:_authToken=${NPM_TOKEN}
-          npm publish
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
 
       - name: Summarize publish result
         run: |
