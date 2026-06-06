@@ -1,0 +1,61 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run coverage
+        run: npm run test:coverage
+
+      - name: Check published version
+        id: package_version
+        run: |
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED_VERSION=$(npm view opencode-goal version 2>/dev/null || true)
+          echo "local_version=$LOCAL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "published_version=$PUBLISHED_VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$LOCAL_VERSION" = "$PUBLISHED_VERSION" ]; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        if: steps.package_version.outputs.already_published != 'true'
+        run: npm publish
+
+      - name: Summarize publish result
+        run: |
+          if [ "${{ steps.package_version.outputs.already_published }}" = "true" ]; then
+            echo "opencode-goal@${{ steps.package_version.outputs.local_version }} is already published." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Published opencode-goal@${{ steps.package_version.outputs.local_version }} to npm." >> "$GITHUB_STEP_SUMMARY"
+          fi

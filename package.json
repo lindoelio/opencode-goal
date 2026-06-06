@@ -1,0 +1,48 @@
+{
+  "name": "opencode-goal",
+  "version": "1.0.0",
+  "description": "Session-scoped /goal command for OpenCode with autonomous execution loop, configurable judge model, and state persistence",
+  "type": "module",
+  "license": "MIT",
+  "author": "Lindoélio Lázaro <lindoelio@gmail.com>",
+  "keywords": ["opencode", "plugin", "goal", "autonomous", "agent", "commands", "judge", "loop"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lindoelio/opencode-goal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lindoelio/opencode-goal/issues"
+  },
+  "homepage": "https://github.com/lindoelio/opencode-goal#readme",
+  "files": [
+    "commands/",
+    "agents/",
+    "skills/",
+    "lib.js",
+    "install.js",
+    "install.sh",
+    "README.md"
+  ],
+  "bin": {
+    "opencode-goal": "./install.js"
+  },
+  "main": "./lib.js",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "install:plugin": "node install.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.0",
+    "vitest": "^3.2.0",
+    "js-yaml": "^4.1.0"
+  }
+}
