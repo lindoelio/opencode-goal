@@ -124,6 +124,27 @@ describe("mergeAgentConfig", () => {
     expect(result.agent["goal-worker"]).toBeDefined()
     expect(result.shell).toBe("bash")
   })
+
+  it("preserves extra properties on existing agent", () => {
+    const existing = {
+      agent: {
+        "goal-judge": {
+          mode: "subagent",
+          model: "my-model",
+          description: "my desc",
+          temperature: 0.3,
+          max_tokens: 4000,
+          tools: ["bash"],
+        },
+      },
+    }
+    const result = mergeAgentConfig(existing, GOAL_AGENTS)
+    expect(result.agent["goal-judge"].temperature).toBe(0.3)
+    expect(result.agent["goal-judge"].max_tokens).toBe(4000)
+    expect(result.agent["goal-judge"].tools).toEqual(["bash"])
+    expect(result.agent["goal-judge"].model).toBe("my-model")
+    expect(result.agent["goal-judge"].description).toBe("my desc")
+  })
 })
 
 describe("isSameAgentDef", () => {
@@ -202,6 +223,88 @@ describe("readJSONConfig", () => {
     try {
       const result = readJSONConfig(tmpPath)
       expect(result).toEqual(config)
+    } finally {
+      rmSync(tmpPath, { force: true })
+    }
+  })
+
+  it("parses JSON with single-line comments", () => {
+    const tmpPath = join(tmpdir(), "opencode-goal-test-line-comment.json")
+    writeFileSync(tmpPath, '{ // comment\n"model": "claude",\n"shell": "zsh"\n}')
+    try {
+      const result = readJSONConfig(tmpPath)
+      expect(result).toEqual({ model: "claude", shell: "zsh" })
+    } finally {
+      rmSync(tmpPath, { force: true })
+    }
+  })
+
+  it("parses JSON with block comments", () => {
+    const tmpPath = join(tmpdir(), "opencode-goal-test-block-comment.json")
+    writeFileSync(tmpPath, '{ /* header */\n"model": "claude",\n"shell": "zsh" /* footer */\n}')
+    try {
+      const result = readJSONConfig(tmpPath)
+      expect(result).toEqual({ model: "claude", shell: "zsh" })
+    } finally {
+      rmSync(tmpPath, { force: true })
+    }
+  })
+
+  it("parses JSON with trailing commas", () => {
+    const tmpPath = join(tmpdir(), "opencode-goal-test-trailing-comma.json")
+    writeFileSync(tmpPath, '{"model": "claude","plugins":["a","b",],}')
+    try {
+      const result = readJSONConfig(tmpPath)
+      expect(result).toEqual({ model: "claude", plugins: ["a", "b"] })
+    } finally {
+      rmSync(tmpPath, { force: true })
+    }
+  })
+
+  it("reads config with agents and comments (full integration)", () => {
+    const tmpPath = join(tmpdir(), "opencode-goal-test-full-jsonc.json")
+    const content = `{
+  // This is my config
+  "$schema": "https://opencode.ai/config.json",
+  "model": "claude-sonnet",
+  "shell": "zsh",
+  "plugins": ["plugin-a", "plugin-b" /* extra */],
+  "agent": {
+    "build": { "mode": "primary", "model": "gpt-4" },
+    "test": { "mode": "primary" }
+  } // end agent
+}`
+    writeFileSync(tmpPath, content)
+    try {
+      const result = readJSONConfig(tmpPath)
+      expect(result.model).toBe("claude-sonnet")
+      expect(result.shell).toBe("zsh")
+      expect(result.plugins).toEqual(["plugin-a", "plugin-b"])
+      expect(result.agent.build).toEqual({ mode: "primary", model: "gpt-4" })
+      expect(result.agent.test).toEqual({ mode: "primary" })
+    } finally {
+      rmSync(tmpPath, { force: true })
+    }
+  })
+
+  it("parses JSON with escaped characters inside strings", () => {
+    const tmpPath = join(tmpdir(), "opencode-goal-test-escaped.json")
+    // Use trailing comma + escaped backslash to force JSONC fallback path
+    writeFileSync(tmpPath, '{"path": "C:\\\\Users\\\\test","quote": "say \\"hello\\"",}')
+    try {
+      const result = readJSONConfig(tmpPath)
+      expect(result).toEqual({ path: "C:\\Users\\test", quote: 'say "hello"' })
+    } finally {
+      rmSync(tmpPath, { force: true })
+    }
+  })
+
+  it("handles a comment-like sequence inside a string", () => {
+    const tmpPath = join(tmpdir(), "opencode-goal-test-comment-in-string.json")
+    writeFileSync(tmpPath, '{"url": "https://example.com/*not-a-comment*/api"}')
+    try {
+      const result = readJSONConfig(tmpPath)
+      expect(result).toEqual({ url: "https://example.com/*not-a-comment*/api" })
     } finally {
       rmSync(tmpPath, { force: true })
     }

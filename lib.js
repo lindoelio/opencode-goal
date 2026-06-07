@@ -26,12 +26,72 @@ export function copyDirRecursive(src, dest) {
   }
 }
 
+function stripJsonComments(raw) {
+  let out = ""
+  let inString = false
+  let inLineComment = false
+  let inBlockComment = false
+  let escape = false
+
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i]
+    const next = raw[i + 1]
+
+    if (inLineComment) {
+      if (ch === "\n") {
+        inLineComment = false
+        out += ch
+      }
+      continue
+    }
+    if (inBlockComment) {
+      if (ch === "*" && next === "/") {
+        inBlockComment = false
+        i++
+      }
+      continue
+    }
+    if (escape) {
+      escape = false
+      out += ch
+      continue
+    }
+    if (ch === "\\") {
+      escape = true
+      out += ch
+      continue
+    }
+    if (ch === '"') {
+      inString = !inString
+      out += ch
+      continue
+    }
+    if (!inString && ch === "/" && next === "/") {
+      inLineComment = true
+      i++
+      continue
+    }
+    if (!inString && ch === "/" && next === "*") {
+      inBlockComment = true
+      i++
+      continue
+    }
+    out += ch
+  }
+  // strip trailing commas before ] or }
+  return out.replace(/,\s*([}\]])/g, "$1")
+}
+
 export function readJSONConfig(path) {
   if (!existsSync(path)) return {}
   try {
     return JSON.parse(readFileSync(path, "utf-8"))
   } catch {
-    return {}
+    try {
+      return JSON.parse(stripJsonComments(readFileSync(path, "utf-8")))
+    } catch {
+      return {}
+    }
   }
 }
 
@@ -42,6 +102,7 @@ export function mergeAgentConfig(existing, ours) {
     if (config.agent[name]) {
       const existingDef = config.agent[name]
       config.agent[name] = {
+        ...existingDef,
         mode: def.mode,
         model: existingDef.model || def.model,
         description: existingDef.description || def.description,
