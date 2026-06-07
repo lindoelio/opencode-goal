@@ -1,11 +1,20 @@
 {
   "name": "opencode-goal-worker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Session-scoped /goal command for OpenCode with autonomous execution loop, configurable judge model, and state persistence",
   "type": "module",
   "license": "MIT",
   "author": "Lindoélio Lázaro <lindoelio@gmail.com>",
-  "keywords": ["opencode", "plugin", "goal", "autonomous", "agent", "commands", "judge", "loop"],
+  "keywords": [
+    "opencode",
+    "plugin",
+    "goal",
+    "autonomous",
+    "agent",
+    "commands",
+    "judge",
+    "loop"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lindoelio/opencode-goal.git"
