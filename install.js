@@ -89,4 +89,8 @@ function main() {
   console.log('  Run /goal "<condition>" to start, /goal to see status, /goal clear to stop.')
 }
 
-main()
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main()
+}
+
+export { main }
