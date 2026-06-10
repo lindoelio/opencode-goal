@@ -1,6 +1,6 @@
 {
   "name": "opencode-goal-worker",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Session-scoped /goal command for OpenCode with autonomous execution loop, configurable judge model, and state persistence",
   "type": "module",
   "license": "MIT",
