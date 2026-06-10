@@ -17,12 +17,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lindoelio/opencode-goal.git"
+    "url": "git+https://github.com/lindoelio/opencode-goal-worker.git"
   },
   "bugs": {
-    "url": "https://github.com/lindoelio/opencode-goal/issues"
+    "url": "https://github.com/lindoelio/opencode-goal-worker/issues"
   },
-  "homepage": "https://github.com/lindoelio/opencode-goal#readme",
+  "homepage": "https://github.com/lindoelio/opencode-goal-worker#readme",
   "files": [
     "commands/",
     "agents/",

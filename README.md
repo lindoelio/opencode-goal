@@ -67,7 +67,7 @@ opencode-goal
 ### From source
 
 ```bash
-git clone https://github.com/lindoelio/opencode-goal
+git clone https://github.com/lindoelio/opencode-goal-worker
 npm install
 npm test
 ```
