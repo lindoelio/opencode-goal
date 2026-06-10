@@ -1,6 +1,6 @@
 {
   "name": "opencode-goal-worker",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Session-scoped /goal command for OpenCode with autonomous execution loop, configurable judge model, and state persistence",
   "type": "module",
   "license": "MIT",
@@ -34,7 +34,7 @@
     "README.md"
   ],
   "bin": {
-    "opencode-goal": "./bin/opencode-goal.js"
+    "opencode-goal": "bin/opencode-goal.js"
   },
   "main": "./lib.js",
   "publishConfig": {
