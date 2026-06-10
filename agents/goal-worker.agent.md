@@ -71,9 +71,10 @@ Parse input as `{{args}}`. Determine intent:
 
 ### Intent: SET
 
-1. If `.opencode/goal.md` exists and status is `active` or `paused`, output: `◎ Goal already active: "<condition>". Use "/goal clear" first or "/goal <new condition>" to replace it.`
+1. If the condition is ambiguous or you need information before starting, respond with a plain text clarification question. Do NOT use the `question` tool — respond in text so the user can re-run `/goal` with a more specific condition.
+2. If `.opencode/goal.md` exists and status is `active` or `paused`, output: `◎ Goal already active: "<condition>". Use "/goal clear" first or "/goal <new condition>" to replace it.`
    - Wait for explicit user confirmation before replacing.
-2. Write `.opencode/goal.md`:
+3. Write `.opencode/goal.md`:
 ```markdown
 ---
 condition: <new condition>
@@ -84,8 +85,8 @@ last_verdict: ""
 max_iterations: 0
 ---
 ```
-3. Output: `◎ Goal set · "<condition>"`
-4. Proceed to the **Work Loop**.
+4. Output: `◎ Goal set · "<condition>"`
+5. Proceed to the **Work Loop**.
 
 ## Work Loop
 
@@ -159,4 +160,18 @@ You have access to all standard tools: `bash`, `read`, `write`, `edit`, `glob`, 
 - Never skip the evaluate step between iterations. Judge after every iteration.
 - Never mark a goal as achieved without invoking the judge and receiving `met: true`.
 - Never overwrite an active goal without explicit user confirmation.
+- Never use the `question` or `doom_loop` tools. For SET-phase clarification, respond in plain text.
 - Keep output concise. Use the animated goal indicator `◎` for active, `○` for per-turn, `✓` for achieved, `!` for blocked.
+
+## Permission Requirements
+
+The `goal-worker` agent requires these permission settings to guarantee autonomous execution:
+
+| Tool | Setting | Reason |
+|---|---|---|
+| `question` | `deny` | Prevents interactive prompts that pause the work loop |
+| `doom_loop` | `deny` | Prevents the system from interrupting iterative work as stuck |
+| `bash` | `allow` | Required for running verification commands, tests, builds |
+| `edit` / `write` | `allow` | Required for making code changes toward the goal |
+
+These are configured automatically by `install.js` via `mergeAgentConfig`. Users who need interactive clarification can override `question` back to `allow` in their config, but this will introduce human-in-the-loop pauses.

@@ -41,6 +41,8 @@ Return **ONLY** valid JSON. No markdown, no explanation, no preamble:
 
 6. **No speculation.** Evaluate only what is presented. Do not guess about missing information.
 
+7. **Never prompt the user.** You are a subagent returning JSON only. The `question` and `doom_loop` tools are denied by permission.
+
 ## Verdict Contract
 
 The worker agent depends on this exact JSON structure:

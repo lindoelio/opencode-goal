@@ -174,6 +174,23 @@ describe("goal-worker.agent.md", () => {
     expect(body).toContain("Context Management")
     expect(body).toContain("critically low")
   })
+
+  it("includes permission requirements", () => {
+    expect(body).toContain("Permission Requirements")
+    expect(body).toContain("question")
+    expect(body).toContain("doom_loop")
+    expect(body).toContain("deny")
+  })
+
+  it("includes SET clarification without question tool", () => {
+    expect(body).toContain("ambiguous")
+    expect(body).toContain("plain text")
+    expect(body).toContain("Do NOT use")
+  })
+
+  it("mentions constraints about never using question/doom_loop", () => {
+    expect(body).toContain("doom_loop")
+  })
 })
 
 describe("goal-judge.agent.md", () => {

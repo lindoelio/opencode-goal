@@ -61,12 +61,20 @@ function main() {
       mode: "primary",
       description:
         "Autonomous goal-driven agent that works toward a verifiable completion condition across a judge-evaluated loop",
+      permission: {
+        question: "deny",
+        doom_loop: "deny",
+      },
     },
     "goal-judge": {
       mode: "subagent",
       model: "ollama-cloud/deepseek-v4-flash",
       description:
         "Evaluates whether a goal condition has been met. Configure to use your cheapest/fastest available model.",
+      permission: {
+        question: "deny",
+        doom_loop: "deny",
+      },
     },
   }
 

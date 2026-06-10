@@ -14,6 +14,7 @@ import {
   readJSONConfig,
   mergeAgentConfig,
   isSameAgentDef,
+  deepMergePermissions,
 } from "../lib.js"
 
 const GOAL_AGENTS = {
@@ -21,12 +22,20 @@ const GOAL_AGENTS = {
     mode: "primary",
     description:
       "Autonomous goal-driven agent that works toward a verifiable completion condition across a judge-evaluated loop",
+    permission: {
+      question: "deny",
+      doom_loop: "deny",
+    },
   },
   "goal-judge": {
     mode: "subagent",
     model: "ollama-cloud/deepseek-v4-flash",
     description:
       "Evaluates whether a goal condition has been met. Configure to use your cheapest/fastest available model.",
+    permission: {
+      question: "deny",
+      doom_loop: "deny",
+    },
   },
 }
 
@@ -145,6 +154,127 @@ describe("mergeAgentConfig", () => {
     expect(result.agent["goal-judge"].model).toBe("my-model")
     expect(result.agent["goal-judge"].description).toBe("my desc")
   })
+
+  it("merges permissions with user override winning", () => {
+    const existing = {
+      agent: {
+        "goal-worker": {
+          mode: "primary",
+          description: "my custom desc",
+          permission: {
+            question: "allow",
+            bash: "ask",
+          },
+        },
+      },
+    }
+    const result = mergeAgentConfig(existing, GOAL_AGENTS)
+    expect(result.agent["goal-worker"].permission).toEqual({
+      question: "allow",
+      doom_loop: "deny",
+      bash: "ask",
+    })
+    expect(result.agent["goal-worker"].description).toBe("my custom desc")
+  })
+
+  it("uses defaults when existing agent has no permissions", () => {
+    const existing = {
+      agent: {
+        "goal-judge": {
+          mode: "subagent",
+          model: "some-model",
+          description: "custom",
+        },
+      },
+    }
+    const result = mergeAgentConfig(existing, GOAL_AGENTS)
+    expect(result.agent["goal-judge"].permission).toEqual(
+      GOAL_AGENTS["goal-judge"].permission
+    )
+  })
+
+  it("preserves existing permissions when defaults are absent", () => {
+    const agentsWithoutPerms = {
+      "custom-agent": {
+        mode: "primary",
+        description: "custom",
+      },
+    }
+    const existing = {
+      agent: {
+        "custom-agent": {
+          mode: "primary",
+          description: "existing",
+          permission: { bash: "deny" },
+        },
+      },
+    }
+    const result = mergeAgentConfig(existing, agentsWithoutPerms)
+    expect(result.agent["custom-agent"].permission).toEqual({ bash: "deny" })
+    expect(result.agent["custom-agent"].description).toBe("existing")
+  })
+
+  it("does not mutate original permission objects", () => {
+    const existing = {
+      agent: {
+        "goal-worker": {
+          mode: "primary",
+          description: GOAL_AGENTS["goal-worker"].description,
+          permission: { custom: "allow" },
+        },
+      },
+    }
+    const originalPerms = structuredClone(existing.agent["goal-worker"].permission)
+    mergeAgentConfig(existing, GOAL_AGENTS)
+    expect(existing.agent["goal-worker"].permission).toEqual(originalPerms)
+  })
+})
+
+describe("deepMergePermissions", () => {
+  it("returns defaults when overrides is null", () => {
+    const result = deepMergePermissions({ a: 1 }, null)
+    expect(result).toEqual({ a: 1 })
+  })
+
+  it("returns overrides when defaults is null", () => {
+    const result = deepMergePermissions(null, { a: 1 })
+    expect(result).toEqual({ a: 1 })
+  })
+
+  it("returns overrides when defaults is a string", () => {
+    const result = deepMergePermissions("allow", { a: 1 })
+    expect(result).toEqual({ a: 1 })
+  })
+
+  it("returns overrides when defaults is an array", () => {
+    const result = deepMergePermissions(["x"], { a: 1 })
+    expect(result).toEqual({ a: 1 })
+  })
+
+  it("deep merges nested permission objects", () => {
+    const defaults = {
+      bash: { "*": "allow", "git push": "ask" },
+      question: "deny",
+    }
+    const overrides = {
+      bash: { "git push": "deny", "npm test": "allow" },
+    }
+    const result = deepMergePermissions(defaults, overrides)
+    expect(result).toEqual({
+      bash: { "*": "allow", "git push": "deny", "npm test": "allow" },
+      question: "deny",
+    })
+  })
+
+  it("does not mutate inputs", () => {
+    const defaults = { question: "deny" }
+    const overrides = { question: "allow" }
+    const defaultsCopy = structuredClone(defaults)
+    const overridesCopy = structuredClone(overrides)
+    deepMergePermissions(defaults, overrides)
+    expect(defaults).toEqual(defaultsCopy)
+    expect(overrides).toEqual(overridesCopy)
+  })
 })
 
 describe("isSameAgentDef", () => {
@@ -196,6 +326,60 @@ describe("isSameAgentDef", () => {
     const a = { mode: "subagent", description: "test" }
     const b = { mode: "subagent", description: "test" }
     expect(isSameAgentDef(a, b)).toBe(true)
+  })
+
+  it("returns false when permissions differ", () => {
+    const a = { mode: "primary", model: "gpt-4", description: "test", permission: { question: "deny" } }
+    const b = { mode: "primary", model: "gpt-4", description: "test", permission: { question: "allow" } }
+    expect(isSameAgentDef(a, b)).toBe(false)
+  })
+
+  it("returns true when permissions are identical nested objects", () => {
+    const a = { mode: "primary", model: "gpt-4", description: "test", permission: { question: "deny", doom_loop: "deny" } }
+    const b = { mode: "primary", model: "gpt-4", description: "test", permission: { question: "deny", doom_loop: "deny" } }
+    expect(isSameAgentDef(a, b)).toBe(true)
+  })
+
+  it("returns false when one has permission and the other does not", () => {
+    const a = { mode: "subagent", model: "gpt-4", description: "test", permission: { question: "deny" } }
+    const b = { mode: "subagent", model: "gpt-4", description: "test" }
+    expect(isSameAgentDef(a, b)).toBe(false)
+  })
+
+  it("returns false when permission arrays differ", () => {
+    const a = { mode: "subagent", model: "gpt-4", description: "test", permission: { task: ["goal-judge"] } }
+    const b = { mode: "subagent", model: "gpt-4", description: "test", permission: { task: ["goal-judge", "explore"] } }
+    expect(isSameAgentDef(a, b)).toBe(false)
+  })
+
+  it("returns true when permission arrays are identical", () => {
+    const a = { mode: "subagent", model: "gpt-4", description: "test", permission: { task: ["goal-judge", "explore"] } }
+    const b = { mode: "subagent", model: "gpt-4", description: "test", permission: { task: ["goal-judge", "explore"] } }
+    expect(isSameAgentDef(a, b)).toBe(true)
+  })
+
+  it("returns false when permission value is null vs object", () => {
+    const a = { mode: "primary", model: "x", description: "x", permission: { nested: null } }
+    const b = { mode: "primary", model: "x", description: "x", permission: { nested: { foo: "bar" } } }
+    expect(isSameAgentDef(a, b)).toBe(false)
+  })
+
+  it("returns false when permission value is array vs object", () => {
+    const a = { mode: "primary", model: "x", description: "x", permission: { nested: ["x"] } }
+    const b = { mode: "primary", model: "x", description: "x", permission: { nested: { foo: "bar" } } }
+    expect(isSameAgentDef(a, b)).toBe(false)
+  })
+
+  it("returns false when same-length permission arrays have different elements", () => {
+    const a = { mode: "primary", model: "x", description: "x", permission: { nested: [{ a: 1 }] } }
+    const b = { mode: "primary", model: "x", description: "x", permission: { nested: [{ a: 2 }] } }
+    expect(isSameAgentDef(a, b)).toBe(false)
+  })
+
+  it("returns false when same-keycount permission objects have different keys", () => {
+    const a = { mode: "primary", model: "x", description: "x", permission: { a: "deny" } }
+    const b = { mode: "primary", model: "x", description: "x", permission: { b: "deny" } }
+    expect(isSameAgentDef(a, b)).toBe(false)
   })
 })
 

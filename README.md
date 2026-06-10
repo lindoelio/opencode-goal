@@ -97,6 +97,15 @@ The installer adds `goal-worker` and `goal-judge` agents to your `~/.config/open
 
 The judge model is entirely configurable — use whatever fast/cheap model you have access to.
 
+The installer also sets safe defaults for agent permissions:
+
+| Tool | Setting | Reason |
+|---|---|---|
+| `question` | `deny` | Prevents mid-loop "should I continue?" prompts |
+| `doom_loop` | `deny` | Prevents the system from interrupting iterative work as stuck |
+
+You can override these in your config if you need interactive clarification during the work loop.
+
 ## State File
 
 Goals persist in `.opencode/goal.md`:
